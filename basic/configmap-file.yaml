@@ -1,0 +1,29 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: test-file
+data:
+  data.csv: |
+    name,age
+    naka,1
+    tanaka,2
+
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx
+spec:
+  restartPolicy: Never
+  containers:
+    - name: busybox
+      image: k8s.gcr.io/busybox
+      command: ["sleep", "3600"]
+      volumeMounts:
+        - name: config # volumes.name と同一
+          mountPath: "/datadir"
+          readOnly: true
+  volumes:
+    - name: config
+      configMap:
+        name: test-file # ConfigMap の metadata.name と同一

@@ -1,0 +1,8 @@
+# kubectl create ns team-b --dry-run=client -o yaml > ns-team-b.yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  creationTimestamp: null
+  name: team-b
+spec: {}
+status: {}
