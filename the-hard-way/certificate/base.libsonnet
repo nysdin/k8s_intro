@@ -1,5 +1,4 @@
 {
-  "CN": "admin",
   "key": {
     "algo": "rsa",
     "size": 2048

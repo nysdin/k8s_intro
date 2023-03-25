@@ -1,11 +1,15 @@
+set -eu
+
+. ../common.sh
+
 ###############################################
 #
 # 証明書のセットアップスクリプト
 #
 ###############################################
 
-workers=(worker-0 worker-1)
-controllers=(controller-0 controller-1)
+# cfssl コマンドの入力ファイル（CSR・署名設定ファイル） *.json をあらかじめ用意しておくこと。
+# the-hard-way/certificate/create-csr.sh を実行すると全てのCSR構築用 json ファイルが作成できるようになってる
 
 echo "cfsslを使って Root CA を建てる"
 # official https://kubernetes.io/ja/docs/tasks/administer-cluster/certificates/#cfssl
@@ -16,41 +20,10 @@ echo "cfsslを使って Root CA を建てる"
 echo "------------------------"
 echo "Root CAを構築（後に kubernetes component の証明書を発行する際はこのRootCAから発行する）"
 echo "------------------------"
-cat > ca-config.json <<EOF
-{
-  "signing": {
-    "default": {
-      "expiry": "8760h"
-    },
-    "profiles": {
-      "kubernetes": {
-        "usages": ["signing", "key encipherment", "server auth", "client auth"],
-        "expiry": "8760h"
-      }
-    }
-  }
-}
-EOF
 
-cat > ca-csr.json <<EOF
-{
-  "CN": "Kubernetes",
-  "key": {
-    "algo": "rsa",
-    "size": 2048
-  },
-  "names": [
-    {
-      "C": "US",
-      "L": "Portland",
-      "O": "Kubernetes",
-      "OU": "CA",
-      "ST": "Oregon"
-    }
-  ]
-}
-EOF
 # 前半で秘密鍵とCSRをjsonで標準出力. 後半で出力されたjsonをファイルに出力. ca は ファイル名のprefix
+
+# RootCA として自己署名証明書 ・ CSR ・ 秘密鍵を作成
 cfssl gencert -initca ca-csr.json | cfssljson -bare ca
 # 鍵の内容を確認
 # openssl rsa -text -noout -in ca-key.pem
@@ -63,24 +36,6 @@ echo "------------------------"
 echo "各Kubernetes Component 用のサーバー/クライアント証明書と、adminユーザー用のクライアント証明書を作成"
 echo "Admin User用の証明書作成"
 echo "------------------------"
-cat > admin-csr.json <<EOF
-{
-  "CN": "admin",
-  "key": {
-    "algo": "rsa",
-    "size": 2048
-  },
-  "names": [
-    {
-      "C": "US",
-      "L": "Portland",
-      "O": "system:masters",
-      "OU": "Kubernetes The Hard Way",
-      "ST": "Oregon"
-    }
-  ]
-}
-EOF
 
 # ca.pem: さっき作った Root CA の証明書
 ## 秘密鍵と証明書作成
@@ -95,59 +50,24 @@ echo "------------------------"
 echo "全てのWorkerノード用にKubeletのクライアント証明書を作成する"
 echo "------------------------"
 ## CN は system:node:<node name> にする必要がある
+# kubelet は API サーバでもあるため SAN を指定するために -hostname option を追加している
 for instance in ${workers[@]}; do
-cat > ${instance}-csr.json <<EOF
-{
-  "CN": "system:node:${instance}",
-  "key": {
-    "algo": "rsa",
-    "size": 2048
-  },
-  "names": [
-    {
-      "C": "US",
-      "L": "Portland",
-      "O": "system:nodes",
-      "OU": "Kubernetes The Hard Way",
-      "ST": "Oregon"
-    }
-  ]
-}
-EOF
+  EXTERNAL_IP=$(gcloud compute instances describe ${instance} --format 'value(networkInterfaces[0].accessConfigs[0].natIP)')
+  INTERNAL_IP=$(gcloud compute instances describe ${instance} --format 'value(networkInterfaces[0].networkIP)')
 
-EXTERNAL_IP=$(gcloud compute instances describe ${instance} --format 'value(networkInterfaces[0].accessConfigs[0].netIP)')
-INTERNAL_IP=$(gcloud compute instances describe ${instance} --format 'value(networkInterfaces[0].networkIP)')
-cfssl gencert \
-      -ca=ca.pem \
-      -ca-key=ca-key.pem \
-      -config=ca-config.json \
-      -hostname=${instance},${EXTERNAL_IP},${INTENRAL_IP} \
-      -profile=kubernetes \
-      ${instance}-csr.json | cfssljson -bare ${instance}
+  cfssl gencert \
+        -ca=ca.pem \
+        -ca-key=ca-key.pem \
+        -config=ca-config.json \
+        -hostname=${instance},${EXTERNAL_IP},${INTERNAL_IP} \
+        -profile=kubernetes \
+        ${instance}-csr.json | cfssljson -bare ${instance}
 done
 
 echo "------------------------"
 echo "Controller manager Client Certificate"
 echo "------------------------"
 ## CN は system:kube-controller-manager にする
-cat > kube-controller-manager-csr.json <<EOF
-{
-  "CN": "system:kube-controller-manager",
-  "key": {
-    "algo": "rsa",
-    "size": 2048
-  },
-  "names": [
-    {
-      "C": "US",
-      "L": "Portland",
-      "O": "system:kube-controller-manager",
-      "OU": "Kubernetes The Hard Way",
-      "ST": "Oregon"
-    }
-  ]
-}
-EOF
 
 cfssl gencert \
       -ca=ca.pem \
@@ -159,24 +79,6 @@ cfssl gencert \
 echo "------------------------"
 echo "Kuber Proxy Client Certificate"
 echo "------------------------"
-cat > kube-proxy-csr.json <<EOF
-{
-  "CN": "system:kube-proxy",
-  "key": {
-    "algo": "rsa",
-    "size": 2048
-  },
-  "names": [
-    {
-      "C": "US",
-      "L": "Portland",
-      "O": "system:node-proxier",
-      "OU": "Kubernetes The Hard Way",
-      "ST": "Oregon"
-    }
-  ]
-}
-EOF
 
 cfssl gencert \
       -ca=ca.pem \
@@ -188,24 +90,6 @@ cfssl gencert \
 echo "------------------------"
 echo "Scheduler Client Certificate"
 echo "------------------------"
-cat > kube-scheduler-csr.json <<EOF
-{
-  "CN": "system:kube-scheduler",
-  "key": {
-    "algo": "rsa",
-    "size": 2048
-  },
-  "names": [
-    {
-      "C": "US",
-      "L": "Portland",
-      "O": "system:kube-scheduler",
-      "OU": "Kubernetes The Hard Way",
-      "ST": "Oregon"
-    }
-  ]
-}
-EOF
 
 cfssl gencert \
       -ca=ca.pem \
@@ -221,7 +105,10 @@ echo "------------------------"
 # 外部からもアクセスできるようにするため、-hostnameオプションでSANに以下を指定する。
 
 # - 10.32.0.1 (apiserverのServiceのIP)
-# - 10.240.0.10,10.240.0.11,10.240.0.12 (各Master NodeのPrivate IP Address)
+# - 各Master NodeのPrivate IP Address
+#   - 10.240.0.10
+#   - 10.240.0.11
+#   - 10.240.0.12
 # - ${KUBERNETES_PUBLIC_ADDRESS} (外部公開用のIP Address)
 # - 127.0.0.1
 # - kubernetes.default （apiserverのServiceのホスト名）
@@ -232,24 +119,6 @@ KUBERNETES_PUBLIC_ADDRESS=$(gcloud compute addresses describe kubernetes-the-har
 echo "------------------------"
 echo "KUBERNETES_PUBLIC_ADDRESS = ${KUBERNETES_PUBLIC_ADDRESS}"
 echo "------------------------"
-cat > kubernetes-csr.json <<EOF
-{
-  "CN": "kubernetes",
-  "key": {
-    "algo": "rsa",
-    "size": 2048
-  },
-  "names": [
-    {
-      "C": "US",
-      "L": "Portland",
-      "O": "Kubernetes",
-      "OU": "Kubernetes The Hard Way",
-      "ST": "Oregon"
-    }
-  ]
-}
-EOF
 
 cfssl gencert \
   -ca=ca.pem \
@@ -263,24 +132,6 @@ echo "------------------------"
 echo "Service Account Key Pair"
 echo "------------------------"
 ## Controller Managerで稼働するToken ControllerがService Account Tokenを生成するための秘密鍵を作成
-cat > service-account-csr.json <<EOF
-{
-  "CN": "service-accounts",
-  "key": {
-    "algo": "rsa",
-    "size": 2048
-  },
-  "names": [
-    {
-      "C": "US",
-      "L": "Portland",
-      "O": "Kubernetes",
-      "OU": "Kubernetes The Hard Way",
-      "ST": "Oregon"
-    }
-  ]
-}
-EOF
 cfssl gencert \
       -ca=ca.pem \
       -ca-key=ca-key.pem \
@@ -288,16 +139,23 @@ cfssl gencert \
       -profile=kubernetes \
       service-account-csr.json | cfssljson -bare service-account
 
+####################################
+#
+# 上記で作成した証明書・秘密鍵を各サーバに配置
+#
+####################################
+
+
 echo "------------------------"
 echo "worker ノードに CA の証明書と各ノードの秘密鍵と証明書を転送する"
 echo "------------------------"
 for instance in ${workers[@]}; do
-  gcloud compute scp ca.pem ${instance}-key.pem ${instance}.pem ${instance}:~/
+  gcloud compute scp ca.pem ${instance}-key.pem ${instance}.pem ubuntu@${instance}:~/
 done
 
 echo "------------------------"
 echo "Master ノードに CA・API Server・Service Account作成用の秘密鍵と証明書を転送"
 echo "------------------------"
 for instance in ${controllers[@]}; do
-  gcloud compute scp ca.pem ca-key.pem kubernetes.pem kubernetes-key.pem service-account.pem service-account-key.pem ${instance}:~/
+  gcloud compute scp ca.pem ca-key.pem kubernetes.pem kubernetes-key.pem service-account.pem service-account-key.pem ubuntu@${instance}:~/
 done

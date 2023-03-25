@@ -6,11 +6,11 @@
   },
   "names": [
     {
-      "C": "US",
-      "L": "Portland",
-      "O": "system:kube-controller-manager",
-      "OU": "Kubernetes The Hard Way",
-      "ST": "Oregon"
+      "C": "JP",
+      "L": "Bunkyo",
+      "O": "Kubernetes",
+      "OU": "",
+      "ST": "Tokyo"
     }
   ]
 }

@@ -11,7 +11,7 @@ terraform {
 
 provider "google" {
   credentials = file("k8s-introduction.json")
-  project     = "k8s-introduction-378212"
+  project     = "k8s-the-hard-way-pj"
   region      = "asia-northeast1"
   zone        = "asia-northeast1-a"
 }

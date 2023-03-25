@@ -1,10 +1,10 @@
 resource "google_compute_instance" "controller" {
-  for_each = toset(["0", "1"])
+  for_each       = toset(["0", "1", "2"])
   name           = "controller-${each.key}"
   machine_type   = "e2-small"
   zone           = "asia-northeast1-a"
   tags           = ["kubernetes-the-hard-way", "controller"]
-  can_ip_forward = true
+  can_ip_forward = true # Linux の net.ipv4.ip_forward に相当
   boot_disk {
     initialize_params {
       size  = "20"
@@ -13,23 +13,26 @@ resource "google_compute_instance" "controller" {
     }
   }
   network_interface {
-    network = "kubernetes-the-hard-way"
-    subnetwork = "kubernetes"
+    subnetwork = google_compute_subnetwork.k8s_the_hard_way.name
     network_ip = "10.240.0.1${each.key}"
     access_config {
     }
   }
   service_account {
-    scopes = ["compute-rw", "storage-ro", "service-management", "service-control", "logging-write", "monitoring"]
-  }
-  metadata = {
-    "user-data" = file("./templates/cloud-init/controller.yaml")
+    scopes = [
+      "compute-rw",
+      "storage-ro",
+      "service-management",
+      "service-control",
+      "logging-write",
+      "monitoring"
+    ]
   }
 }
 
 
 resource "google_compute_instance" "worker" {
-  for_each = toset(["0", "1"])
+  for_each       = toset(["0", "1", "2"])
   name           = "worker-${each.key}"
   machine_type   = "e2-small"
   zone           = "asia-northeast1-a"
@@ -43,13 +46,23 @@ resource "google_compute_instance" "worker" {
     }
   }
   network_interface {
-    network = "kubernetes-the-hard-way"
-    subnetwork = "kubernetes"
+    # network    = "kubernetes-the-hard-way"
+    subnetwork = google_compute_subnetwork.k8s_the_hard_way.name
     network_ip = "10.240.0.2${each.key}"
     access_config {
     }
   }
   service_account {
-    scopes = ["compute-rw", "storage-ro", "service-management", "service-control", "logging-write", "monitoring"]
+    scopes = [
+      "compute-rw",
+      "storage-ro",
+      "service-management",
+      "service-control",
+      "logging-write",
+      "monitoring"
+    ]
+  }
+  metadata = {
+    "pod-cidr": "10.200.${each.key}.0/24"
   }
 }
