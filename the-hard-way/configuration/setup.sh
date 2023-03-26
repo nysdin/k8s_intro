@@ -73,6 +73,7 @@ set_kubeconfig \
 echo "------------------------"
 echo "create kubeconfig for controller manager"
 echo "------------------------"
+# APIサーバを 127.0.0.1 にしているが、外部公開用IPアドレスにしても問題ない
 component_name="kube-controller-manager"
 set_kubeconfig \
   "kubernetes-the-hard-way" \
@@ -86,7 +87,8 @@ set_kubeconfig \
 echo "------------------------"
 echo "create kubeconfig for kube-scheduler"
 echo "------------------------"
-component_name="kube-controller-manager"
+# APIサーバを 127.0.0.1 にしているが、外部公開用IPアドレスにしても問題ない
+component_name="kube-scheduler"
 set_kubeconfig \
   "kubernetes-the-hard-way" \
   "../certificate/ca.pem" \
@@ -99,6 +101,8 @@ set_kubeconfig \
 echo "------------------------"
 echo "create kubeconfig for Admin User"
 echo "------------------------"
+# Masterノード上で kubectl を実行することを想定しているため、APIサーバを 127.0.0.1 に指定している
+# 作業用PCで使用する場合は、外部公開用IPアドレスを指定する必要があり、この場合の kubeconfig は別途作成する
 component_name="admin"
 set_kubeconfig \
   "kubernetes-the-hard-way" \
@@ -114,12 +118,12 @@ echo "------------------------"
 echo "workerノードに kubelet と kube-proxy の kubeconfig を配布"
 echo "------------------------"
 for insatnce in ${workers[@]}; do
-  gcloud compute scp ${instance}.kubeconfig kube-proxy.kubeconfig ${instance}:~/
+  gcloud compute scp ${instance}.kubeconfig kube-proxy.kubeconfig ubuntu@${instance}:~/
 done
 
 echo "------------------------"
 echo "Masterノードに kube-scheduler と kube-controller-manager と admin の kubeconfig を配布"
 echo "------------------------"
 for instance in ${controllers[@]}; do
-  gcloud compute scp kube-scheduler.kubeconfig kube-controller-manager.kubeconfig admin.kubeconfig ${instance}:~/
+  gcloud compute scp kube-scheduler.kubeconfig kube-controller-manager.kubeconfig admin.kubeconfig ubuntu@${instance}:~/
 done
