@@ -46,7 +46,6 @@ resource "google_compute_instance" "worker" {
     }
   }
   network_interface {
-    # network    = "kubernetes-the-hard-way"
     subnetwork = google_compute_subnetwork.k8s_the_hard_way.name
     network_ip = "10.240.0.2${each.key}"
     access_config {
@@ -63,6 +62,6 @@ resource "google_compute_instance" "worker" {
     ]
   }
   metadata = {
-    "pod-cidr": "10.200.${each.key}.0/24"
+    "pod-cidr" : "10.200.${each.key}.0/24"
   }
 }
