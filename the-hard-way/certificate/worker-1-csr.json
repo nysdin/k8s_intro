@@ -1,16 +1,16 @@
 {
-  "CN": "system:node:worker-1",
-  "key": {
-    "algo": "rsa",
-    "size": 2048
-  },
-  "names": [
-    {
-      "C": "JP",
-      "L": "Bunkyo",
-      "O": "Kubernetes",
-      "OU": "",
-      "ST": "Tokyo"
-    }
-  ]
+   "CN": "system:node:worker-1",
+   "key": {
+      "algo": "rsa",
+      "size": 2048
+   },
+   "names": [
+      {
+         "C": "JP",
+         "L": "Bunkyo",
+         "O": "system:nodes",
+         "OU": "Kubernetes",
+         "ST": "Tokyo"
+      }
+   ]
 }

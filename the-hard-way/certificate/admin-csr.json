@@ -8,8 +8,8 @@
     {
       "C": "JP",
       "L": "Bunkyo",
-      "O": "Kubernetes",
-      "OU": "",
+      "O": "system:masters",
+      "OU": "Kubernetes",
       "ST": "Tokyo"
     }
   ]

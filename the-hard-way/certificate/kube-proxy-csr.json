@@ -1,16 +1,16 @@
 {
-   "CN": "system:kube-proxy",
-   "key": {
-      "algo": "rsa",
-      "size": 2048
-   },
-   "names": [
-      {
-         "C": "JP",
-         "L": "Bunkyo",
-         "O": "Kubernetes",
-         "OU": "",
-         "ST": "Tokyo"
-      }
-   ]
+  "CN": "system:kube-proxy",
+  "key": {
+    "algo": "rsa",
+    "size": 2048
+  },
+  "names": [
+    {
+      "C": "JP",
+      "L": "Bunkyo",
+      "O": "system:node-proxier",
+      "OU": "Kubernetes",
+      "ST": "Tokyo"
+    }
+  ]
 }

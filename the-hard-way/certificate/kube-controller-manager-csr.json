@@ -8,8 +8,8 @@
     {
       "C": "JP",
       "L": "Bunkyo",
-      "O": "Kubernetes",
-      "OU": "",
+      "O": "system:kube-controller-manager",
+      "OU": "Kubernetes",
       "ST": "Tokyo"
     }
   ]

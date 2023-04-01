@@ -1,4 +1,5 @@
-local base = {
+local make_csr(cn, o) = {
+  "CN": cn,
   "key": {
     "algo": "rsa",
     "size": 2048
@@ -7,43 +8,22 @@ local base = {
     {
       "C": "JP",
       "L": "Bunkyo",
-      "O": "Kubernetes",
-      "OU": "",
+      "O": o,
+      "OU": "Kubernetes",
       "ST": "Tokyo"
     }
   ]
 };
 
-
 {
-  "admin-csr.json": {
-    "CN": "admin",
-  } + base,
-  "ca-csr.json": {
-    "CN": "Kubernetes"
-  } + base,
-  "kube-controller-manager-csr.json": {
-    "CN": "system:kube-controller-manager"
-  } + base,
-  "kube-proxy-csr.json": {
-    "CN": "system:kube-proxy"
-  } + base,
-  "kube-scheduler-csr.json": {
-    "CN": "system:kube-scheduler"
-  } + base,
-  "kubernetes-csr.json": {
-    "CN": "kubernetes"
-  } + base,
-  "service-account-csr.json": {
-    "CN": "service-accounts"
-  } + base,
-  "worker-0-csr.json": {
-    "CN": "system:node:worker-0"
-  } + base,
-  "worker-1-csr.json": {
-    "CN": "system:node:worker-1"
-  } + base,
-  "worker-2-csr.json": {
-    "CN": "system:node:worker-2"
-  } + base
+  "ca-csr.json": make_csr(cn = "Kubernetes", o = "Kubernetes"),
+  "admin-csr.json": make_csr(cn = "admin", o = "system:masters"),
+  "worker-0-csr.json": make_csr(cn = "system:node:worker-0", o = "system:nodes"),
+  "worker-1-csr.json": make_csr(cn = "system:node:worker-1", o = "system:nodes"),
+  "worker-2-csr.json": make_csr(cn = "system:node:worker-2", o = "system:nodes"),
+  "kube-controller-manager-csr.json": make_csr(cn = "system:kube-controller-manager", o = "system:kube-controller-manager"),
+  "kube-proxy-csr.json": make_csr(cn = "system:kube-proxy", o = "system:node-proxier"),
+  "kube-scheduler-csr.json": make_csr(cn = "system:kube-scheduler", o = "system:kube-scheduler"),
+  "kubernetes-csr.json": make_csr(cn = "kubernetes", o = "Kubernetes"),
+  "service-account-csr.json": make_csr(cn = "service-accounts", o = "Kubernetes"),
 }
