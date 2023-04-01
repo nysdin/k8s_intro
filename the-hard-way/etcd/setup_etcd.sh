@@ -3,28 +3,32 @@
 # etcd をインストール
 ETCD_DOWNLAD_PATH=/tmp/etcd
 mkdir -p ${ETCD_DOWNLAD_PATH}
-wget -q --show-progress --https-only --timestamping \
-  -O ${ETCD_DOWNLAD_PATH}/etcd-v3.3.9-linux-amd64.tar.gz \
-  "https://github.com/coreos/etcd/releases/download/v3.3.9/etcd-v3.3.9-linux-amd64.tar.gz"
-# -C: 解凍先ディレクトリを指定
-tar xvf ${ETCD_DOWNLAD_PATH}/etcd-v3.3.9-linux-amd64.tar.gz -C ${ETCD_DOWNLAD_PATH}
-sudo mv ${ETCD_DOWNLAD_PATH}/etcd-v3.3.9-linux-amd64/etcd* /usr/local/bin/
+if [[ ! -f /usr/local/bin/etcd ]]; then
+  wget -q --show-progress --https-only --timestamping \
+    -O ${ETCD_DOWNLAD_PATH}/etcd-v3.3.9-linux-amd64.tar.gz \
+    "https://github.com/coreos/etcd/releases/download/v3.3.9/etcd-v3.3.9-linux-amd64.tar.gz"
+  # -C: 解凍先ディレクトリを指定
+  tar xvf ${ETCD_DOWNLAD_PATH}/etcd-v3.3.9-linux-amd64.tar.gz -C ${ETCD_DOWNLAD_PATH}
+  sudo mv -f ${ETCD_DOWNLAD_PATH}/etcd-v3.3.9-linux-amd64/etcd* /usr/local/bin/
+fi
 
 # Root CA証明書・APIサーバの秘密鍵と証明書を配置
 sudo mkdir -p /etc/etcd /var/lib/etcd
-sudo cp ~/ca.pem ~/kubernetes-key.pem ~/kubernetes.pem /etc/etcd/
+sudo cp -f ~/ca.pem ~/kubernetes-key.pem ~/kubernetes.pem /etc/etcd/
 
 # systemd: etcd service の設定ファイル作成
 INTERNAL_IP=$(curl -s -H "Metadata-Flavor: Google" \
   http://metadata.google.internal/computeMetadata/v1/instance/network-interfaces/0/ip)
 ETCD_NAME=$(hostname -s)
 
+# peer 系は 他の etcd サーバーとの通信時に使用する証明書などを指定している
 ## --certfile: サーバーとしての通信に使用する証明書
 ## --key-file: サーバーとしての通信に使用する秘密鍵
-## --peer-cert-file: etcd間の通信に使う証明書
+## --peer-cert-file: etcd間の通信に使うクライアント証明書
 ## --peer-key-file: etcd間の通信に使う秘密鍵
 ## --peer-client-cert-auth: etcd間の通信でもクライアント認証する
 ## --client-cert-auth: サーバーとしての通信でもクライアント認証する
+## --trusted-ca-file: Root CA証明書
 cat <<EOF | sudo tee /etc/systemd/system/etcd.service
 [Unit]
 Description=etcd
@@ -58,4 +62,4 @@ EOF
 
 sudo systemctl daemon-reload
 sudo systemctl enable etcd
-sudo systemctl start etcd
+sudo systemctl restart etcd
