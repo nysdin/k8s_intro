@@ -43,6 +43,36 @@ resource "google_compute_firewall" "kubernetes_the_hard_way_allow_external" {
   }
 }
 
+resource "google_compute_firewall" "allow_health_check" {
+  name          = "kubernetes-the-hard-way-allow-health-check"
+  network       = google_compute_network.main.name
+  source_ranges = ["209.85.152.0/22", "209.85.204.0/22", "35.191.0.0/16"] # lb-google
+  allow {
+    protocol = "tcp"
+  }
+}
+
 resource "google_compute_address" "kubernetes_the_hard_way" {
   name = "kubernetes-the-hard-way"
+}
+
+resource "google_compute_http_health_check" "api_server" {
+  name         = "kubernetes"
+  description  = "Kubernetes Health Check"
+  host         = "kubernetes.default.svc.cluster.local"
+  request_path = "/healthz"
+}
+
+# google_compute_instance.example.self_link: AWSでいうARNのようなもので各リソースに割り当てられる一意のURL
+resource "google_compute_target_pool" "kubernetes" {
+  name          = "kubernetes-target-pool"
+  health_checks = [google_compute_http_health_check.api_server.name]
+  instances     = [for instance in google_compute_instance.controller : instance.self_link]
+}
+
+resource "google_compute_forwarding_rule" "kubernetes" {
+  name       = "kubernetes-forwarding-rule"
+  target     = google_compute_target_pool.kubernetes.id
+  port_range = "6443"
+  ip_address = google_compute_address.kubernetes_the_hard_way.address
 }
