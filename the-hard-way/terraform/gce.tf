@@ -65,3 +65,11 @@ resource "google_compute_instance" "worker" {
     "pod-cidr" : "10.200.${each.key}.0/24"
   }
 }
+
+resource "google_compute_route" "pod_network" {
+  for_each    = toset(["0", "1", "2"])
+  name        = "kubernetes-route-10-200-${each.key}-0-24"
+  network     = google_compute_network.main.id
+  next_hop_ip = "10.240.0.2${each.key}"
+  dest_range  = "10.200.${each.key}.0/24"
+}
