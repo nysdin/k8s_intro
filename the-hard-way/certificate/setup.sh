@@ -105,6 +105,7 @@ echo "------------------------"
 # 外部からもアクセスできるようにするため、-hostnameオプションでSANに以下を指定する。
 
 # - 10.32.0.1 (apiserverのServiceのIP)
+## - kube-apiserver 起動時の --service-cluster-ip-range で 10.32.0.0/24 を指定したのでそのネットワーク内から割り振られるんだと思う
 # - 各Master NodeのPrivate IP Address
 #   - 10.240.0.10
 #   - 10.240.0.11
