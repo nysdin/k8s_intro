@@ -14,3 +14,5 @@ cd $SCRIPT_DIR
 cd etcd && ./setup.sh
 cd $SCRIPT_DIR
 cd control && ./setup.sh
+cd $SCRIPT_DIR
+cd worker && ./setup.sh
