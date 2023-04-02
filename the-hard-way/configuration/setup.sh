@@ -1,6 +1,4 @@
-#!/bin/bash
-
-set -e
+#!/bin/bash -eu
 
 . ../common.sh
 
@@ -117,7 +115,7 @@ set_kubeconfig \
 echo "------------------------"
 echo "workerノードに kubelet と kube-proxy の kubeconfig を配布"
 echo "------------------------"
-for insatnce in ${workers[@]}; do
+for instance in ${workers[@]}; do
   gcloud compute scp ${instance}.kubeconfig kube-proxy.kubeconfig ubuntu@${instance}:~/
 done
 
