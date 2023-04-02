@@ -197,6 +197,7 @@ sudo systemctl restart kube-apiserver kube-controller-manager kube-scheduler
 
 
 sudo apt -y install nginx
+# kubernetes.default.svc.cluster.local というホスト名は、 <svc名>.<namespace名>.svc.cluster.local という命名に基づいている
 cat > kubernetes.default.svc.cluster.local <<EOF
 server {
   listen      80;
