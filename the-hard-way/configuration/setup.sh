@@ -62,7 +62,7 @@ component_name="kube-proxy"
 set_kubeconfig \
   "kubernetes-the-hard-way" \
   "../certificate/ca.pem" \
-  "https://${KUBERNETES_PUBLIC_ADDRESS}:644" \
+  "https://${KUBERNETES_PUBLIC_ADDRESS}:6443" \
   "../certificate/${component_name}.pem" \
   "../certificate/${component_name}-key.pem" \
   "${component_name}" \
