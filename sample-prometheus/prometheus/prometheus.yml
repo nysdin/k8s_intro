@@ -1,0 +1,11 @@
+# 全体設定
+global:
+  scrape_interval: 15s #
+
+# 監視ターゲットに関する設定
+scrape_configs:
+  - job_name: "node"
+    scrape_interval: 5s
+    static_configs:
+      - targets:
+          - "wordpress_1:9100"

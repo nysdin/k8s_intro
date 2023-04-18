@@ -76,9 +76,3 @@ resource "google_compute_forwarding_rule" "kubernetes" {
   port_range = "6443"
   ip_address = google_compute_address.kubernetes_the_hard_way.address
 }
-
-resource "aws_ssm_parameter" "spacelift_test" {
-  type  = "String"
-  name = "/spacelift/test"
-  value = "test"
-}

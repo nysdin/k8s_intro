@@ -1,0 +1,13 @@
+version: "3"
+services:
+  wordpress_1:
+    ports:
+      - 9100:9100
+    volumes:
+      - ./node_exporter-1.1.2.linux-amd64.tar.gz:/root/node_exporter-1.1.2.linux-amd64.tar.gz
+    working_dir: /root
+    command: >
+      bash -c "service apache2 start &&
+      tar xvfz node_exporter-1.1.2.linux-amd64.tar.gz &&
+      cd node_exporter-1.1.2.linux-amd64 &&
+      ./node_exporter"
