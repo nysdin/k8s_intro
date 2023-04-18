@@ -11,7 +11,7 @@ terraform {
 
 provider "aws" {
   region = "ap-northeast-1"
-  profile = "nysdin"
+  # profile = "nysdin"
   default_tags {
     tags = {
       Terraform = "true"
